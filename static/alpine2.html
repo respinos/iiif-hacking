@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apline Experiment #2</title>
+  
+  <style>
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #viewer {
+      width: 80vw;
+      height: 80vh;
+      background: #ddd;
+    }
+
+  </style>
+  
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/manifesto.js"></script>
+  <script defer src="alpine2.js"></script>
+</head>
+<body>
+  
+  <!-- x-data="{ message: 'Hello, La Jolla.' }"  -->
+  <div id="viewer" @loaded.window="message=$event.detail.message">
+  </div>
+
+  <!-- <script>
+function setup() {
+  return {
+    message: 'Message received.',
+
+    init() {
+      console.log("OK");
+    }
+  }
+}
+    
+  </script> -->
+
+  <script type="module">
+
+    // document.addEventListener('alpine:init', async () => {
+    //   console.log("init");
+
+    //   $viewer = document.querySelector('#viewer');
+
+    //   manifest = manifesto.parseManifest(await manifesto.loadManifest('../data/clark1ic.003109971.json'));
+    //   // canvases = manifest.getSequences()[0].getCanvases();
+
+    //   // Alpine.data('canvases', canvases);
+    //   Alpine.data('payload', () => { return {
+    //     message: 'Ahoy',
+    //     manifest: manifest,
+    //     canvases: canvases,
+    //     } });
+    //   console.log("??");
+    // })
+
+  </script>
+
+</body>
+</html>

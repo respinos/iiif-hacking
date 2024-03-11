@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apline Experiment #2</title>
+  
+  <style>
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #viewer {
+      width: 80vw;
+      height: 80vh;
+      background: #ddd;
+    }
+
+  </style>
+  
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/manifesto.js"></script>
+  <script defer src="alpine3.js"></script>
+</head>
+<body>
+  
+  <!-- x-data="{ message: 'Hello, La Jolla.' }"  -->
+  <div id="viewer" x-data>
+  </div>
+  
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.store('payload', {
+        message: 'Startup',
+        ready: false,
+      })
+    })
+  </script>
+
+</body>
+</html>
