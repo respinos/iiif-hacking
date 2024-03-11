@@ -4,11 +4,11 @@ import sveltePlugin from "esbuild-svelte";
 async function watch() {
   let ctx = await esbuild
     .context({
-      entryPoints: ["src/js/app5.js"],
+      entryPoints: ["src/js/app6.js"],
       mainFields: ["svelte", "browser", "module", "main"],
       conditions: ["svelte", "browser"],
       bundle: true,
-      outfile: "dist/js/app5.js",
+      outfile: "dist/js/app6.js",
       plugins: [sveltePlugin({compilerOptions: { css: true }})],
       logLevel: "info",
     })
