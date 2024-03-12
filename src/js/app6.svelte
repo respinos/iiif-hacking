@@ -24,6 +24,11 @@
   let detailsGroupEl;
   let tabGroups = {};
 
+  let headerTabs = {};
+  headerTabs.pages = true;
+  headerTabs.image = true;
+  headerTabs.plaintext = false;
+
   let btnZoomIn;
   let btnZoomOut;
   let btnHome;
@@ -110,6 +115,7 @@
 
   function updateTabGroupScroll(event) {
     const tabName = event.detail.name;
+    let targetIdx = tabName == 'ranges' ? canvasRangeMap[canvasIdx] : canvasIdx;
     let activeEl = tabGroups[tabName].querySelector(`[data-canvas-idx="${canvasIdx}"]`);
     console.log("-- updateTabGroupScroll", tabName, activeEl);
     if ( ! activeEl ) {
@@ -198,6 +204,7 @@
         sequenceMode: true,
         tileSources: tileSources,
         initialPage: canvasIdx - 1,
+        preserveViewport: true,
       });
 
       dragon.addHandler('page', (event) => {
@@ -217,8 +224,44 @@
   })
 </script>
 
+<div class="header flex flex-flow-row flex-align-center flex-space-between">
+  <span>A Title</span>
+  <div class="header--controls flex flex-flow-row flex-align-center justify-end">
+    <div class="button--group">
+      <sl-tooltip content="Toggle pages">
+        <button class="button button--ghost border-rounded-left" 
+          class:active={headerTabs.pages}
+          on:click={() => headerTabs.pages = ! headerTabs.pages}>
+          <span class="material-icons">view_list</span>
+          <span>Pages</span>
+        </button>
+      </sl-tooltip>
+      <sl-tooltip content="Toggle image">
+      <button class="button button--ghost" 
+        class:active={headerTabs.image}
+        on:click={() => headerTabs.image = ! headerTabs.image}>
+        <span class="material-icons">image</span>
+        <span>Image</span>
+      </button>
+      </sl-tooltip>
+      <sl-tooltip content="Toggle text">
+      <button class="button button--ghost border-rounded-right" 
+        class:active={headerTabs.plaintext}
+        on:click={() => headerTabs.plaintext = ! headerTabs.plaintext}>
+        <span class="material-icons">article</span>
+        <span>Text</span>
+      </button>
+      </sl-tooltip>
+    </div>
+    <sl-tooltip content="Full screen">
+    <button type="button" class="button button--ghost button--square" bind:this={btnFullPage}>
+      <span class="material-icons">fullscreen</span>
+    </button>
+    </sl-tooltip>
+  </div>
+</div>
 <PaneGroup direction="horizontal">
-  <Pane defaultSize={25} class="viewer--sidebar">
+  <Pane defaultSize={25} maxSize={50} class="viewer--sidebar {headerTabs.pages ? '' : 'hidden'}">
     <div style="max-height: 100%; padding: 0rem; display: grid; grid-template-rows: minmax(0, 1fr);">
     <sl-tab-group bind:this={detailsGroupEl} on:sl-tab-show={updateTabGroupScroll}>
       <!-- <sl-tab slot="nav" panel="message">Message</sl-tab> -->
@@ -285,47 +328,11 @@
         {/if}
     </sl-tab-group>
     </div>
-    {#if false}
-    <div class="details-group" on:sl-show={togglePanels} bind:this={detailsGroupEl}>
-      <sl-details summary="Message" open>
-        <pre>{message}</pre>
-      </sl-details>
-      {#if loaded}
-        {#if ranges}
-          <sl-details summary="Index">
-            <pre>THERE WOULD BE CONTENTS</pre>
-          </sl-details>
-        {/if}
-        <sl-details summary="Items">
-          <div style="height: 100%; overflow: auto;">
-          <ul class="list-unstyled flex flex-flow-column flex-align-center">
-            {#each canvases as canvas, idx (canvas.id)}
-              {@const image = canvas.getImages()[0]}
-              {@const imageId = image.getResource().getServices()[0].id}
-              <li class="w-80">
-                <figure class="m-0 w-100">
-                  <button 
-                    on:click={openCanvas(canvas, idx)} 
-                    type="button" 
-                    class="button button--ghost flex flex-flow-column w-100 flex-align-center flex-justify-center gap-0_125 p-half"
-                    >
-                    <img loading="lazy" src="{imageId}/full/!150,150/0/default.jpg" alt="" class="border" />
-                    <p class="text-xxx-small m-0">{canvas.getLabel().getValue()}</p>
-                  </button>
-                </figure>
-              </li>
-            {/each}
-          </ul>
-          </div>
-        </sl-details>
-      {/if}
-    </div>
-    {/if}
   </Pane>
-  <PaneResizer class="pane--resizer">
+  <PaneResizer class="pane--resizer {headerTabs.pages && headerTabs.image ? '' : 'hidden'}">
     <span class="material-icons">drag_indicator</span>
   </PaneResizer>
-  <Pane defaultSize={75}>
+  <Pane defaultSize={75} class="{headerTabs.image ? '' : 'hidden'}">
     {#if loaded}
       <div class="image-viewer-pane">
         <div bind:this={dragonEl} class="image-viewer-wrap">
@@ -398,30 +405,40 @@
           </div>
         </div>
         <div class="image-viewer-toolbar bg-light">
+          <sl-tooltip content="Zoom in">
           <button type="button" class="button button--ghost button--square" bind:this={btnZoomIn}>
             <span class="material-icons">add_circle_outline</span>
           </button>
+          </sl-tooltip>
+          <sl-tooltip content="Zoom out">
           <button type="button" class="button button--ghost button--square" bind:this={btnZoomOut}>
             <span class="material-icons">remove_circle_outline</span>
           </button>
+          </sl-tooltip>
+          <sl-tooltip content="Reset zoom">
           <button type="button" class="button button--ghost button--square" bind:this={btnHome}>
             <span class="material-icons">home</span>
           </button>
-          <button type="button" class="button button--ghost button--square" bind:this={btnFullPage}>
+          </sl-tooltip>
+          <!-- <button type="button" class="button button--ghost button--square" bind:this={btnFullPage}>
             <span class="material-icons">fullscreen</span>
-          </button>
+          </button> -->
           <div style="width: 1px; height: 50%; background: #999; margin: 0 0.25rem;"></div>
           <div class="flex flex-flow-row flex-align-center" style="gap: 0.125rem; font-size: 0.875rem;">
             <label for="jumpToSeq" class="col-form-label">#</label>
             <input class="form-control" id="jumpToSeq" type="text" style="width: 4ch; text-align: center;" bind:value={canvasIdx} on:focus={() => lastCanvasIdx = canvasIdx} on:change={onCanvasChange} />
             <span style="text-wrap: none;"> / {canvases.length}</span>
           </div>
+          <sl-tooltip content="Previous Item" hoist>
           <button type="button" class="button button--ghost button--square" bind:this={btnPreviousCanvas}>
             <span class="material-icons" style="transform: rotate(-90deg);">arrow_circle_up</span>
           </button>
+          </sl-tooltip>
+          <sl-tooltip content="Next Item" hoist>
           <button type="button" class="button button--ghost button--square" bind:this={btnNextCanvas}>
             <span class="material-icons" style="transform: rotate(90deg);">arrow_circle_up</span>
           </button>
+          </sl-tooltip>
         </div>
       </div>
     {:else}
@@ -509,23 +526,47 @@
     opacity: 0.8;
   }
 
-  .image-tools-toolbar button {
+  .button--group {
+    display: flex;
+    align-items: center;
+  }
+
+  .image-tools-toolbar button,
+  .button--group button {
     line-height: 0;
     margin: 0;
   }
 
-  .image-tools-toolbar button:not(:first-child) {
+  .image-tools-toolbar button:not(:first-child),
+  .button--group button:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
 
-  .image-tools-toolbar button:not(:last-child) {
+  .image-tools-toolbar button:not(:last-child),
+  .button--group button:not(:last-child) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
 
-  .image-tools-toolbar button + button {
+  .image-tools-toolbar button + button,
+  .button--group button + button {
     margin-left: -1px;
+  }
+
+  .button--group button {
+    margin-left: -1px;
+    border-radius: 0;
+  }
+
+  .button--group button.border-rounded-left {
+    border-top-left-radius: var(--radius-default);
+    border-bottom-left-radius: var(--radius-default);
+  }
+
+  .button--group button.border-rounded-right {
+    border-top-right-radius: var(--radius-default);
+    border-bottom-right-radius: var(--radius-default);
   }
 
   .image-tools-toolbar div > button {
@@ -543,6 +584,15 @@
 
   button.active {
     background: var(--color-neutral-200);
+  }
+
+  button.button--ghost.active {
+    background: var(--color-neutral-500);
+    color: white;
+  }
+
+  button.button--ghost.active + button.button--ghost.active {
+    border-left-color: white;
   }
   
   .image-options {
@@ -597,6 +647,14 @@
 
   .active {
     background: var(--color-neutral-100);
+  }
+
+  .header {
+    background: white;
+    padding: 0.25rem 1rem;
+    box-shadow: 0px 4px 15px -3px rgba(0,0,0,0.5);
+    border-top: 2px solid var(--color-teal-300);
+    z-index: 1;
   }
 
   /* input[type="range"] {
