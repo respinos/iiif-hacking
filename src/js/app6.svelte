@@ -14,12 +14,15 @@
   let tileSources;
   let ranges;
   let canvasIdx = 1;
+  let rangeIdx = 0;
+  let canvasRangeMap = {};
   let lastCanvasIdx;
 
   let dragonEl;
   let dragon;
 
   let detailsGroupEl;
+  let tabGroups = {};
 
   let btnZoomIn;
   let btnZoomOut;
@@ -87,6 +90,11 @@
     dragon.goToPage(idx);
   }
 
+  function findCanvasIdx(canvasId) {
+    const idx = canvases.findIndex((c) => c.id == canvasId);
+    return idx + 1;
+  }
+
   function gotoCanvasId(canvasId) {
     console.log("-- gotoCanvasId", canvasId);
     const canvas = canvases.find((c) => c.id == canvasId);
@@ -98,6 +106,18 @@
     if (event.target.localName === 'sl-details') {
       [...detailsGroupEl.querySelectorAll('sl-details')].map(details => (details.open = event.target === details));
     }
+  }
+
+  function updateTabGroupScroll(event) {
+    const tabName = event.detail.name;
+    let activeEl = tabGroups[tabName].querySelector(`[data-canvas-idx="${canvasIdx}"]`);
+    console.log("-- updateTabGroupScroll", tabName, activeEl);
+    if ( ! activeEl ) {
+      activeEl = tabGroups[tabName].querySelector(`[data-canvas-idx]`);
+    }
+    setTimeout(() => {
+      activeEl.scrollIntoView();
+    })
   }
 
   function onCanvasChange(event) {
@@ -125,8 +145,29 @@
         tileSources.push(getInfoUrl(canvas));
       })
       let range = manifest.getTopRanges();
+      let tmp = [];
       if ( range.length ) {
         ranges = range[0].getRanges();
+        ranges.forEach((r) => {
+          const canvasId = r.getCanvasIds()[0];
+          const idx = findCanvasIdx(canvasId);
+          tmp.push(idx);
+        })
+
+        console.log("-- grouping ranges", tmp);
+        let i = tmp.shift();
+        let j = i;
+        while ( tmp.length ) {
+          let k = tmp.shift();
+          for(let s = j; s < k; s++) {
+            canvasRangeMap[s] = j;
+          }
+          j = k;
+        }
+        for(let s = j; s <= canvases.length; s++){
+          canvasRangeMap[s]= j;
+        }
+        console.log("-- grouping ranges", canvasRangeMap);
       }
       loaded = true;
     });
@@ -178,8 +219,8 @@
 
 <PaneGroup direction="horizontal">
   <Pane defaultSize={25} class="viewer--sidebar">
-    <div style="max-height: 100%; padding: 1rem; display: grid; grid-template-rows: minmax(0, 1fr);">
-    <sl-tab-group>
+    <div style="max-height: 100%; padding: 0rem; display: grid; grid-template-rows: minmax(0, 1fr);">
+    <sl-tab-group bind:this={detailsGroupEl} on:sl-tab-show={updateTabGroupScroll}>
       <!-- <sl-tab slot="nav" panel="message">Message</sl-tab> -->
       {#if loaded}
         <sl-tab slot="nav" panel="items">Pages</sl-tab>
@@ -193,13 +234,20 @@
       </sl-tab-panel>
       {#if loaded}
         <sl-tab-panel name="items">
-          <div style="height: 100%; overflow: auto;">
-          <ul class="list-unstyled flex flex-flow-column flex-align-center">
+          <div style="height: 100%; overflow: auto;" bind:this={tabGroups.items}>
+          <ul class="list-unstyled" style="margin: 0rem;">
             {#each canvases as canvas, idx (canvas.id)}
               {@const image = canvas.getImages()[0]}
               {@const imageId = image.getResource().getServices()[0].id}
-              <li class="w-80">
-                <figure class="m-0 w-100">
+              <li class="mb-0" class:active={idx + 1 == canvasIdx}>
+                <button class="flex flex-flow-row flex-start w-100 canvas"
+                  type="button"
+                  on:click={openCanvas(canvas, idx)}
+                  data-canvas-idx={idx + 1}>
+                  <img loading="lazy" src="{imageId}/full/,150/0/default.jpg" alt="" class="border" style="height: 50px" />
+                  <p class="text-xxx-small m-0" style="font-weight: normal;">{canvas.getLabel().getValue()}</p>
+                </button>
+                <!-- <figure class="m-0 w-100" data-canvas-idx={idx + 1}>
                   <button 
                     on:click={openCanvas(canvas, idx)} 
                     type="button" 
@@ -208,7 +256,7 @@
                     <img loading="lazy" src="{imageId}/full/!150,150/0/default.jpg" alt="" class="border" />
                     <p class="text-xxx-small m-0">{canvas.getLabel().getValue()}</p>
                   </button>
-                </figure>
+                </figure> -->
               </li>
             {/each}
           </ul>
@@ -216,14 +264,22 @@
         </sl-tab-panel>
           {#if ranges}
           <sl-tab-panel name="ranges">
-            <ul>
-              {#each ranges as range}
-                {@const label = range.getLabel().getValue()}
-                {@const canvasId = range.getCanvasIds()[0]}
-                <li>
-                  <a href="#" on:click={gotoCanvasId(canvasId)}>{label}</a></li>
-              {/each}
-            </ul>
+            <div>
+              <ul class="tab-group-ranges" bind:this={tabGroups.ranges}>
+                {#each ranges as range}
+                  {@const label = range.getLabel().getValue()}
+                  {@const canvasId = range.getCanvasIds()[0]}
+                  {@const thisCanvasIdx = findCanvasIdx(canvasId)}
+                  <li class="p-0 mb-0" class:active={canvasRangeMap[canvasIdx] == thisCanvasIdx}>
+                    <button class="canvas flex" type="button"
+                      data-canvas-idx={thisCanvasIdx} on:click={gotoCanvasId(canvasId)}>
+                      {label}
+                    </button>
+                    <!-- <a href="#" class="canvas block p-half pl-1" data-canvas-idx={thisCanvasIdx} on:click={gotoCanvasId(canvasId)}>{label}</a> -->
+                  </li>
+                {/each}
+              </ul>
+            </div>
           </sl-tab-panel>
           {/if}
         {/if}
@@ -510,6 +566,37 @@
 
   .hidden {
     display: none !important;
+  }
+
+  sl-tab-panel [data-canvas-idx] {
+    scroll-margin-top: 2rem;
+  }
+
+  .list-unstyled li + li,
+  .tab-group-ranges li + li {
+    border-top: 1px solid var(--color-neutral-100);
+  }
+
+  button.canvas {
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    background: inherit;
+    margin-bottom: 0;
+    text-align: left;
+    font-weight: normal;
+    width: 100%;
+
+    border: none;
+  }
+
+  button.canvas:hover, button.canvas:active,
+  a.canvas:hover, a.canvas:active {
+    background: var(--color-teal-100);
+  }
+
+  .active {
+    background: var(--color-neutral-100);
   }
 
   /* input[type="range"] {
