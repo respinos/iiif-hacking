@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Svelte App #6</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  />
+  <link href="https://cdn.jsdelivr.net/npm/@umich-lib/web@1.3.0/umich-lib.css" rel="stylesheet" />
+  <link href="https://quod.lib.umich.edu/digital-collections-style-guide/dist/css/embed.css" rel="stylesheet" />
+
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@umich-lib/web@1.3.0/dist/umich-lib/umich-lib.esm.js"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.4.0/dist/themes/light.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.4.0/dist/shoelace-autoloader.js"></script>
+
+
+  <link rel="stylesheet" href="./css/range.css" />
+<style>
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #viewer {
+      width: 80vw;
+      height: 80vh;
+      background: var(--color-neutral-200);
+      box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-rows: min-content minmax(0, 1fr);
+    }
+
+    .viewer--sidebar {
+      display: grid; 
+      /* grid-template-rows: min-content 1fr; */
+      grid-template-rows: minmax(0, 1fr);
+      background: #fff;
+      color: var(--color-neutral-500);
+    }
+
+    .w-80 {
+      width: 80%;
+    }
+
+    .gap-0_125 {
+      gap: 0.125rem;
+    }
+
+    .pane--resizer {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-neutral-500);
+      color: white;
+      width: 8px;
+    }
+
+    .pane--resizer--thumb {
+      position: absolute;
+      background: black;
+      border-radius: 6px;
+      padding: 0.5rem 0.125rem;
+      color: white;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .invisible > [data-pane], .invisible > [role="separator"] {
+      visibility: hidden !important;
+    }
+
+    .position-relative {
+      position: relative;
+    }
+
+    .order-1 {
+      order: 1;
+    }
+
+    .order-2 {
+      order: 2;
+    }
+
+    .openseadragon-canvas:focus::after {
+      content: '';
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      background: transparent;
+      pointer-events: none;
+      /* border: 8px solid orange; */
+      outline: 0;
+      box-shadow: 0 0 0 4px var(--color-maize-400) inset, 0 0 0 6px var(--color-neutral-400) inset;
+    }
+
+    .loader::after {
+        border-color: var(--color-neutral-300) transparent;
+    }
+
+  </style>  
+  <script defer src="../dist/js/app7.js"></script>
+</head>
+<body>
+
+  <div 
+    id="viewer"
+    class="shadow"
+    data-manifest-url="https://roger.quod.lib.umich.edu/cgi/t/text/api/manifest/amjewess:taj1895.0001.005"
+    x-data-manifest-url="https://quod.lib.umich.edu/cgi/t/text/api/manifest/moajrnl:acf2679.0024.001"></div>
+  
+  <script>
+    let ix;
+    window.toggleFocus = function() {
+      if ( ix ) { clearInterval(ix); ix = null; return; }
+      ix = setInterval(() => {
+        console.log(document.activeElement);
+      }, 1500);
+    }
+  </script>
+
+</body>
+</html>
