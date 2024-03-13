@@ -57,6 +57,9 @@
   }
   let fxFlipped = false;
 
+  let resizeObserver;
+  let viewerWidth;
+
   function fxRotate(delta) {
     let deg = dragon.viewport.getRotation();
     let next_deg = deg + delta;
@@ -179,6 +182,15 @@
       dragon.goToPage(canvasIdx - 1);
     }
   }
+
+  function onResize(event) {
+    const entry = event.detail.entries[1];
+    console.log("-- on.resize", entry.contentRect);
+    viewerWidth = entry.contentRect.width;
+    if ( viewerWidth < 700 && headerTabs.image && headerTabs.plaintext ) {
+      headerTabs.plaintext = false;
+    }
+  }
   
   // $: manifesto.loadManifest(manifestUrl).then((data) => {
   //   manifest = manifesto.parseManifest(data);
@@ -260,7 +272,14 @@
           plainText = processPlainText(value);
           inPageTransition = false;
           // hide the plaintext tab ONLY IF the image tab is visible
-          headerTabs.plaintext = headerTabs.image ? plainText != '' : true;
+          if ( viewerWidth < 800 && headerTabs.image ) {
+            // do nothing
+          } else if ( headerTabs.image ) {
+            headerTabs.plaintext = plainText != '';
+          } else {
+            headerTabs.plainText = true;
+          }
+          // headerTabs.plaintext = headerTabs.image ? plainText != '' : true;
           // headerTabs.plaintext = plainText != '';
         })
     })
@@ -270,7 +289,7 @@
 
     fetchPlainText(canvases[canvasIdx - 1]).then((value) => {
       plainText = processPlainText(value);
-      headerTabs.plaintext = plainText != '';
+      headerTabs.plaintext = ( viewerWidth >= 800 ) && plainText != '';
     })
   }
 
@@ -281,6 +300,7 @@
   })
 </script>
 
+<sl-resize-observer bind:this={resizeObserver} on:sl-resize={onResize}>
 <div class="header flex flex-flow-row flex-align-center flex-space-between">
   <span>A Title</span>
   <div class="header--controls flex flex-flow-row flex-align-center justify-end">
@@ -288,7 +308,7 @@
       <sl-tooltip content="Toggle pages">
         <button class="button button--ghost border-rounded-left" 
           class:active={headerTabs.pages}
-          on:click={() => headerTabs.pages = ! headerTabs.pages}>
+          on:click={() => { headerTabs.pages = ! headerTabs.pages; }}>
           <span class="material-icons">view_list</span>
           <span>Pages</span>
         </button>
@@ -296,7 +316,7 @@
       <sl-tooltip content="Toggle image">
       <button class="button button--ghost" 
         class:active={headerTabs.image}
-        on:click={() => headerTabs.image = ! headerTabs.image}>
+        on:click={() => { headerTabs.image = ! headerTabs.image; if ( headerTabs.plaintext && headerTabs.image && viewerWidth < 800 ) { headerTabs.plaintext = false; } }}>
         <span class="material-icons">image</span>
         <span>Image</span>
       </button>
@@ -304,7 +324,7 @@
       <sl-tooltip content="Toggle text">
       <button class="button button--ghost border-rounded-right" 
         class:active={headerTabs.plaintext}
-        on:click={() => headerTabs.plaintext = ! headerTabs.plaintext}
+        on:click={() => { headerTabs.plaintext = ! headerTabs.plaintext; if ( headerTabs.image && headerTabs.plaintext && viewerWidth < 800 ) { headerTabs.image = false; } }}
         disabled={!plainText}>
         <span class="material-icons">article</span>
         <span>Text</span>
@@ -399,7 +419,7 @@
               </div>
             </div>
           </Pane>
-          <PaneResizer class="pane--resizer {(!plainText || !headerTabs.image) ? 'hidden' : ''}">
+          <PaneResizer class="pane--resizer {(!plainText || ( !headerTabs.image || !headerTabs.plaintext)) ? 'hidden' : ''}">
             <button class="pane--resizer--thumb" tabindex="-1">
               <span class="material-icons">drag_indicator</span>
             </button>
@@ -530,6 +550,7 @@
     </div>
   </Pane>
 </PaneGroup>
+</sl-resize-observer>
 
 <style>
 
