@@ -18,7 +18,7 @@
   let canvasRangeMap = {};
   let lastCanvasIdx;
 
-  let inPageTransition = false;
+  let inPageTransition = true;
 
   let q1;
 
@@ -184,7 +184,8 @@
   }
 
   function onResize(event) {
-    const entry = event.detail.entries[1];
+    const entry = event.detail.entries.at(-1);
+    if ( ! entry ) { return ; }
     console.log("-- on.resize", entry.contentRect);
     viewerWidth = entry.contentRect.width;
     if ( viewerWidth < 700 && headerTabs.image && headerTabs.plaintext ) {
@@ -289,7 +290,14 @@
 
     fetchPlainText(canvases[canvasIdx - 1]).then((value) => {
       plainText = processPlainText(value);
+      if ( ! headerTabs.plaintext ) {
+        // force the intitial state to resize
+        setTimeout(() => {
+          dragon.viewport.goHome(true);
+        }, 100);
+      }
       headerTabs.plaintext = ( viewerWidth >= 800 ) && plainText != '';
+      inPageTransition = false;
     })
   }
 
@@ -302,7 +310,7 @@
 
 <sl-resize-observer bind:this={resizeObserver} on:sl-resize={onResize}>
 <div class="header flex flex-flow-row flex-align-center flex-space-between">
-  <span>A Title</span>
+  <span>{manifest?.getLabel()?.getValue()}</span>
   <div class="header--controls flex flex-flow-row flex-align-center justify-end">
     <div class="button--group">
       <sl-tooltip content="Toggle pages">
@@ -462,8 +470,8 @@
           <div style="width: 1px; height: 50%; background: #999; margin: 0 0.25rem;"></div>
           <div class="flex flex-flow-row flex-align-center" style="gap: 0.125rem; font-size: 0.875rem;">
             <label for="jumpToSeq" class="col-form-label">#</label>
-            <input class="form-control" id="jumpToSeq" type="text" style="width: 4ch; text-align: center;" bind:value={canvasIdx} on:focus={() => lastCanvasIdx = canvasIdx} on:change={onCanvasChange} />
-            <span style="text-wrap: none; margin-bottom: 3px;"> / {canvases.length}</span>
+            <input class="form-control" id="jumpToSeq" type="text" style="width: 4ch; text-align: center; font-size: 1em;" bind:value={canvasIdx} on:focus={() => lastCanvasIdx = canvasIdx} on:change={onCanvasChange} />
+            <span style="text-wrap: nowrap; padding: 1px 0; border: 2px solid transparent;"> / {canvases.length}</span>
           </div>
           <sl-tooltip content="Previous Item" hoist>
           <button type="button" class="button button--ghost button--square" bind:this={btnPreviousCanvas}>
@@ -794,12 +802,16 @@
     padding: 0.25rem 1rem;
     box-shadow: 0px 4px 15px -3px rgba(0,0,0,0.5);
     border-top: 2px solid var(--color-teal-300);
-    z-index: 1;
+    z-index: 10;
   }
 
   .blank-page {
     align-self: center;
     margin: auto;
+  }
+
+  input[type="text"] {
+    font-size: 1rem;
   }
 
   /* input[type="range"] {
